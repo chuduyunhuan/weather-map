@@ -469,7 +469,11 @@ BASE_MAP.addGeoJSON = function(url,style){
 					return style;
 				},
 				onEachFeature: function(feature, layer){
-					layer.bindPopup(feature.properties.name);
+					//绑定popup
+					var popup = new L.popup({maxWidth: 1000, maxHeight: 800})
+						.setContent('<iframe width="900px" height="580px" frameborder=no src="pages/city-weather.html?name=' + encodeURIComponent(feature.properties.name) + '"></iframe>');
+					layer.bindPopup(popup);
+					//构造热力渲染数据
 					var pointArr = feature.geometry.coordinates[0][0][0];
 					var obj = {
 						lng: parseFloat(pointArr[0]),
@@ -503,13 +507,13 @@ BASE_MAP.addOnlineGeoJSON = function(){
 	}
 };
 BASE_MAP.layers.addHeatMap = function(arr){
-	// BASE_MAP.dataCol.heatMapData = [];
-	// arr.map(function(objVal){
-	// 	BASE_MAP.queryWeatherData(objVal,arr);
-	// });
-	// BASE_MAP.dataCol.heatMapData = [{"lng":119.127345,"lat":33.623843,"name":"清河区","value":22},{"lng":119.295650664063,"lat":33.1425942207031,"name":"金湖县","value":20},{"lng":119.22271609375,"lat":34.0492153144531,"name":"涟水县","value":19},{"lng":118.897345,"lat":33.353843,"name":"洪泽县","value":20},{"lng":118.487345,"lat":33.243843,"name":"盱眙县","value":20}];
-	BASE_MAP.dataCol.heatMapData = [{"lng":121.087345,"lat":31.0538430000001,"name":"青浦区","value":22},{"lng":121.297345,"lat":31.493843,"name":"嘉定区","value":22},{"lng":121.347345,"lat":31.2438430000001,"name":"长宁区","value":19},{"lng":121.027345,"lat":30.9438430000001,"name":"金山区","value":23},{"lng":121.337345,"lat":31.303843,"name":"宝山区","value":23},{"lng":121.397008085938,"lat":31.2888137031251,"name":"普陀区","value":22},{"lng":121.087345,"lat":31.0538430000001,"name":"松江区","value":23},{"lng":121.44982546875,"lat":31.0143874335938,"name":"奉贤区","value":23},{"lng":121.247345,"lat":31.263843,"name":"闵行区","value":22},{"lng":121.787447539063,"lat":31.1987868476563,"name":"浦东新区","value":23}];
-	BASE_MAP.layers.heatMapRenderer(BASE_MAP.dataCol.heatMapData);
+	BASE_MAP.dataCol.heatMapData = [];
+	arr.map(function(objVal){
+		BASE_MAP.queryWeatherData(objVal,arr);
+	});
+	BASE_MAP.dataCol.heatMapData = [{"lng":119.127345,"lat":33.623843,"name":"清河区","value":22},{"lng":119.295650664063,"lat":33.1425942207031,"name":"金湖县","value":20},{"lng":119.22271609375,"lat":34.0492153144531,"name":"涟水县","value":19},{"lng":118.897345,"lat":33.353843,"name":"洪泽县","value":20},{"lng":118.487345,"lat":33.243843,"name":"盱眙县","value":20}];
+	// BASE_MAP.dataCol.heatMapData = [{"lng":121.087345,"lat":31.0538430000001,"name":"青浦区","value":22},{"lng":121.297345,"lat":31.493843,"name":"嘉定区","value":22},{"lng":121.347345,"lat":31.2438430000001,"name":"长宁区","value":19},{"lng":121.027345,"lat":30.9438430000001,"name":"金山区","value":23},{"lng":121.337345,"lat":31.303843,"name":"宝山区","value":23},{"lng":121.397008085938,"lat":31.2888137031251,"name":"普陀区","value":22},{"lng":121.087345,"lat":31.0538430000001,"name":"松江区","value":23},{"lng":121.44982546875,"lat":31.0143874335938,"name":"奉贤区","value":23},{"lng":121.247345,"lat":31.263843,"name":"闵行区","value":22},{"lng":121.787447539063,"lat":31.1987868476563,"name":"浦东新区","value":23}];
+	// BASE_MAP.layers.heatMapRenderer(BASE_MAP.dataCol.heatMapData);
 };
 BASE_MAP.layers.heatMapRenderer = function(arr){
 	var cfg = {

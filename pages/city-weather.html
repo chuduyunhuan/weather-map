@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>weather forecast</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<style>
+	html{
+		font-family: "Microsoft YaHei"; font-size: 20px; line-height: 20px;
+	}
+	.text-wx{
+		font-family: "Microsoft YaHei"; font-size: 20px; 
+	}
+	.button-wx{
+		font-family: "Microsoft YaHei"; font-size: 20px; background-color: #003254; color: white;
+	}
+	.margin-top-pos-wx{
+		margin-top: 5px;
+	}
+	.chart-wx{
+		width: 100%; height: 400px;
+	}
+	.legend-wx{
+		color: #00f859;
+	}
+	.detailed-common-wx{
+		display: inline; text-align: center; line-height: 30px;
+	}
+	.detailed-title-wx{
+		color: #00000; font-size: 18px;
+	}
+	.detailed-value-wx{
+		color: #549944; font-size: 20px;
+	}
+</style>
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
+<script>
+	// 路径配置
+	require.config({
+		paths: {
+			echarts: 'http://echarts.baidu.com/build/dist'
+		}
+	});
+</script>
+<script>
+	var DATA_CACHED = {
+		future: {
+			date: [],
+			temperature: {
+				unit: '温度(℃)',
+				min: [],
+				max: []
+			},
+			weather: [],
+			wind: []
+		},
+		today: {
+			detailed: {
+				city: '城市',
+				date_y: '日期',
+				week: '周几',
+				temperature: '温度',
+				weather: '天气',
+				wind: '风力',
+				dressing_index: '体感',
+				dressing_advice: '穿着建议',
+				exercise_index: '锻炼指数',
+				travel_index: '旅行指数',
+				uv_index: '紫外线指数',
+				wash_index: '洗晒指数'
+			}
+		},
+		legend: ['最低温度','最高温度'],
+		timeSign: 'day_',
+		cityName: ''
+	};
+</script>
+<script>
+	function getObjCount(obj){
+		var count = 0;
+		for(var name in obj){
+			if(obj.hasOwnProperty(name)){
+				count++;
+			}
+		}
+		return count;
+	}
+</script>
+</head>
+<body>
+	<!-- <div>
+		<label>请输入城市名称:&nbsp;&nbsp;</label>
+		<input type="text" placeholder="上海" id="cityName" class="text-wx" />
+		<input type="button" value="查询" id="queryData" class="button-wx" />
+	</div> -->
+	<div class="margin-top-pos-wx">
+		<fieldset>
+			<legend id="legendName" class="legend-wx">上海 未来一周天气预报</legend>
+			<div id="chart" class="chart-wx"></div>
+		</fieldset>
+	</div>
+	<div>
+		<fieldset>
+			<legend class="legend-wx">今日天气详细信息</legend>
+			<marquee id="marqueeText" direction="left" behavior="scroll" scrollamount="3" onmouseover="this.stop();" onmouseout="this.start();" scrolldelay="0" loop="-1" width="100%" height="100">
+				我是滚动的字幕
+			</marquee>
+		</fieldset>
+	</div>
+	<script>
+		// $(document).ready(init);
+		var parasFromParent = getParas();
+		var cityName = decodeURIComponent(parasFromParent.name);
+		queryWeatherData(cityName);
+		function getParas(){
+			var sUrl = window.location.href;
+			sUrl = sUrl.split('?')[1];
+			sUrl = sUrl.split(/[&#]/g);//以特殊字符为分隔符生成数组
+			var resultObj = {};//最后需要返回的对象
+			for(var i= 0, len = sUrl.length; i<len; ++i){
+			    var temValue = sUrl[i];
+			    var temArrayV = temValue.split('=');
+			    resultObj[temArrayV[0]] = temArrayV[1];
+			}
+			return resultObj; 
+		}
+		function init(){
+			queryWeatherData('上海');
+			$('#queryData').on('click',initEvent);
+			$('#cityName').keydown(function(e){
+				if(e.keyCode == 13){
+					initEvent();
+				}
+			});
+		}
+		function initEvent(){
+			var cityName = $('#cityName').val();
+			if(!cityName) cityName = '上海';
+			clearData();
+			queryWeatherData(cityName);			
+		}
+		function clearData(){
+			DATA_CACHED['future']['temperature']['min'] = [];
+			DATA_CACHED['future']['temperature']['max'] = [];
+			DATA_CACHED['future']['date'] = [];
+			DATA_CACHED['future']['weather'] = [];
+			DATA_CACHED['future']['wind'] = [];
+		}
+		function queryWeatherData(name){
+			var url = 'http://v.juhe.cn/weather/index?callback=?';
+			var cityName = name.replace(/县|区|市|新区|开发区|高新区/g,''),
+				key = '7b38cd31ba792380357cffc206d96b01';
+			$.ajax({
+				url: url,
+				type: 'get',
+				dataType: 'json',
+				data: {
+					'cityname': cityName,
+					'key': key
+				}
+			})
+				.done(function(data){
+					var objData = data.result;
+					if(!objData){
+						alert('暂无该城市天气数据,请确认城市名称是否正确!');
+						return;
+					}
+					extractData(objData);
+					$('#legendName').html(cityName + ' 未来一周天气预报');
+				});
+		}
+		function drawChart(){
+			require(['echarts','echarts/chart/line','echarts/chart/bar'],function (ec) {
+				// 基于准备好的dom，初始化echarts图表
+				var myChart = ec.init(document.getElementById('chart'));
+				var option = {
+				    tooltip: {
+				        trigger: 'axis'
+				    },
+				    legend: {
+				        data: DATA_CACHED['legend'],
+				        textStyle: {
+				            fontSize: 24,
+				            color: '#000000'
+				        },
+				    },
+				    toolbox: {
+						show : true,
+						feature : {
+						    //mark : {show: true},
+						    dataView : {show: true, readOnly: false},
+						    magicType : {show: true, type: ['line', 'bar']},
+						    restore : {show: true},
+						    saveAsImage : {show: true}
+						}
+				    },
+				    grid: {
+				        x: '5%',
+				        width: '90%',
+				        borderWidth: 0
+				        //backgroundColor: '#252c34'
+				    },
+				    xAxis : [
+				        {
+				            type : 'category',
+				            axisLabel: {
+				            	rotate: 0,
+				                textStyle: {
+				                    fontSize: 20,
+				                    color: '#00000'
+				                }
+				            },
+				            boundaryGap: false,
+				            name: '',
+				            splitLine: {
+				                show: true,
+				                lineStyle: {
+				                    color: ['#003250'],
+				                    width: 1,
+				                    type: 'solid'
+				                }
+				            },
+				            data : DATA_CACHED['future']['date']
+				        }
+				    ],
+				    yAxis : [
+				        {
+				            type : 'value',
+				            //splitNumber: 1,
+				            axisLabel: {
+				                textStyle: {
+				                    fontSize: 20,
+				                    color: '#000000'
+				                }
+				            },
+				            nameTextStyle: {
+				                fontSize: 24,
+				                color: '#003254'
+				            },
+				            name: DATA_CACHED['future']['temperature']['unit'],
+				            splitLine: {
+				                show: true,
+				                lineStyle: {
+				                    color: ['#003250'],
+				                    width: 1,
+				                    type: 'solid'
+				                }
+				            }
+				        }
+				    ],
+				    series : [
+				        {
+				            "name": DATA_CACHED['legend'][0],
+				            "type": "line",
+				            itemStyle:{
+				                normal: {color:'blue', lineStyle: {width: 2}}
+				            },
+				            "data": DATA_CACHED['future']['temperature']['min']
+				        },
+				        {
+				            "name": DATA_CACHED['legend'][1],
+				            "type": "line",
+				            itemStyle:{
+				                normal: {color:'red', lineStyle: {width: 2}}
+				            },
+				            "data": DATA_CACHED['future']['temperature']['max']
+				        }
+				    ]
+				};
+				// 为echarts对象加载数据 
+				myChart.setOption(option);
+			});
+		}
+		function printDetailed(){
+			var htmlStr = '';
+			var count = 0;
+			var temObj = DATA_CACHED['today']['detailed'];
+			for(var name in temObj){
+				htmlStr += '<span class="detailed-common-wx detailed-title-wx">' + temObj[name] + ':' + '</span>';
+				htmlStr += '&nbsp;';
+				htmlStr += '<span class="detailed-common-wx detailed-value-wx">' + DATA_CACHED['today'][name] + '</span>';
+				htmlStr += '&nbsp;&nbsp;&nbsp;&nbsp;';
+				count++;
+				if(count % 4 === 0){
+					htmlStr += '</br>';
+				}
+			}
+			$('#marqueeText').html(htmlStr);
+		}
+		function extractData(objData){
+			var futureData = objData.future,
+				todayData = objData.today;
+			copyData('future',futureData);
+			getDetailedData('today',todayData);
+			drawChart();
+			printDetailed();
+			function copyData(id,data){
+				var useData = DATA_CACHED[id];
+				for(var val in data){
+					var tarObj = data[val];
+					for(var name in useData){
+						if(useData[name] instanceof Array){
+							useData[name].push(tarObj[name]);
+						}else{
+							var temValArr = tarObj[name].split('~');
+							useData[name]['min'].push(parseFloat(temValArr[0].replace(/[^\d]/g,'')));
+							useData[name]['max'].push(parseFloat(temValArr[1].replace(/[^\d]/g,'')));
+						}
+					}
+				}
+			}
+			function getDetailedData(id,data){
+				$.extend(DATA_CACHED[id],data);
+			}
+		}
+	</script>
+</body>
+</html>
