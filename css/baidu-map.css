@@ -11,7 +11,7 @@
 .div-city-name{
 	position: absolute; top: 10px; left: 80px;
 }
-
+/*文本框自动提示*/
 .auto_hidden {
 	border: 1px solid #003254; position: absolute; display: none;
 }
@@ -27,4 +27,9 @@
     color:#000000;
     width:100%;
     background-color:#ffffff;
+}
+
+/*图层控制器样式*/
+input[type='radio'], input[type='checkbox']{
+    margin-top: -2px;
 }
