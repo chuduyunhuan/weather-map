@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>百度地图&GeoJSON</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="css/leaflet.css" />
+<link rel="stylesheet" href="css/baidu-map.css" />
+
+<script src="scripts/jquery-1.9.1.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script src="scripts/leaflet.js"></script>
+<script src="scripts/leaflet-baidu.js"></script>
+<script src="scripts/heatmap.js"></script>
+<script src="scripts/leaflet-heatmap.js"></script>
+<script src="scripts/smart-text.js"></script>
+</head>
+<body>
+	<div id="map" class="map"></div>
+	<div class="div-city-name" align="center">
+		<input type="text" id="cityName" class="form-control" placeholder="请输入城市名称" />
+	</div>
+	<div class="auto_hidden" id="smartAuto">自动完成 DIV</div>
+	<script src="scripts/baidu-map.js"></script>
+	<script>
+		$(document).ready(BASE_MAP.init('map',{minZoom: 1, zoom: 10}));
+	</script>
+</body>
+</html>
