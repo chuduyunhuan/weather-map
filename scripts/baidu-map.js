@@ -446,6 +446,11 @@ BASE_MAP.addBaseMap = function(id,opts){
 	var normalLayer = new L.tileLayer.baiduLayer('Normal.Map');
 	BASE_MAP.layers.normalLayer = normalLayer;
 	BASE_MAP.map.addLayer(normalLayer);
+	//添加图层控制器
+	var layersControl = new L.control.layers();
+	layersControl.addBaseLayer(normalLayer,'地图');
+	layersControl.addTo(BASE_MAP.map);
+	BASE_MAP.layers.layersControl = layersControl;
 }
 BASE_MAP.addGeoJSON = function(url,style){
 	$.ajax({
@@ -483,6 +488,8 @@ BASE_MAP.addGeoJSON = function(url,style){
 			var center = jsonLayer.getLayers()[0].getBounds().getCenter();
 			jsonLayer.addTo(BASE_MAP.map);
 			BASE_MAP.map.setView(center,11);
+			//添加到图层控制器
+			BASE_MAP.layers.layersControl.addOverlay(jsonLayer,'地市矢量图');
 			//城市下辖地市温度热力图渲染
 			BASE_MAP.layers.heatMapRenderer(nameArr);
 			//BASE_MAP.layers.addHeatMap(nameArr);
@@ -527,6 +534,8 @@ BASE_MAP.layers.heatMapRenderer = function(arr){
 	BASE_MAP.map.addLayer(heatMapLayer);
 	heatMapLayer.setData(testData);
 	BASE_MAP.layers.heatMapLayer = heatMapLayer;
+	//添加到图层控制器
+	BASE_MAP.layers.layersControl.addOverlay(heatMapLayer,'温度热力图');
 };
 BASE_MAP.queryWeatherData = function(obj,arr){
 	var url = 'http://v.juhe.cn/weather/index?callback=?';
@@ -579,6 +588,6 @@ BASE_MAP.layers.setStyleOptions = function(opts){
 	return BASE_MAP.commonMethods.setOptions(obj,opts);
 };
 BASE_MAP.layers.clearLayers = function(){
-	BASE_MAP.layers.jsonLayer && BASE_MAP.map.removeLayer(BASE_MAP.layers.jsonLayer);
-	BASE_MAP.layers.heatMapLayer && BASE_MAP.map.removeLayer(BASE_MAP.layers.heatMapLayer);
+	BASE_MAP.layers.jsonLayer && (BASE_MAP.map.removeLayer(BASE_MAP.layers.jsonLayer),BASE_MAP.layers.layersControl.removeLayer(BASE_MAP.layers.jsonLayer));
+	BASE_MAP.layers.heatMapLayer && (BASE_MAP.map.removeLayer(BASE_MAP.layers.heatMapLayer),BASE_MAP.layers.layersControl.removeLayer(BASE_MAP.layers.heatMapLayer));
 }
