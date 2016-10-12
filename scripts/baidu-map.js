@@ -444,11 +444,16 @@ BASE_MAP.addBaseMap = function(id,opts){
 	opts = BASE_MAP.setMapOptions(opts);
 	BASE_MAP.map = new L.map(id,opts);
 	var normalLayer = new L.tileLayer.baiduLayer('Normal.Map');
+	var satelliteLayer = new L.tileLayer.baiduLayer('Satellite.Map');
 	BASE_MAP.layers.normalLayer = normalLayer;
+	BASE_MAP.layers.satelliteLayer = satelliteLayer;
 	BASE_MAP.map.addLayer(normalLayer);
 	//添加图层控制器
-	var layersControl = new L.control.layers();
-	layersControl.addBaseLayer(normalLayer,'地图');
+	var baseLayers = {
+		"地图": normalLayer,
+		"卫星": satelliteLayer
+	};
+	var layersControl = new L.control.layers(baseLayers,[]);
 	layersControl.addTo(BASE_MAP.map);
 	BASE_MAP.layers.layersControl = layersControl;
 }
@@ -470,9 +475,8 @@ BASE_MAP.addGeoJSON = function(url,style){
 				},
 				onEachFeature: function(feature, layer){
 					//绑定popup
-					var popup = new L.popup({maxWidth: 1000, maxHeight: 800})
-						.setContent('<iframe width="900px" height="580px" frameborder=no src="pages/city-weather.html?name=' + encodeURIComponent(feature.properties.name) + '"></iframe>');
-					layer.bindPopup(popup);
+					var content = '<iframe width="900px" height="580px" frameborder=no src="pages/city-weather.html?name=' + encodeURIComponent(feature.properties.name) + '"></iframe>';
+					BASE_MAP.layers.setPopup(layer,content);
 					//构造热力渲染数据
 					var pointArr = feature.geometry.coordinates[0][0][0];
 					var obj = {
@@ -493,11 +497,21 @@ BASE_MAP.addGeoJSON = function(url,style){
 			jsonLayer.addTo(BASE_MAP.map);
 			BASE_MAP.map.setView(center,11);
 			//添加到图层控制器
-			BASE_MAP.layers.layersControl.addOverlay(jsonLayer,'地市矢量图');
+			BASE_MAP.layers.addToLayerControl(jsonLayer,'地市矢量图');
 			//城市下辖地市温度热力图渲染
 			BASE_MAP.layers.heatMapRenderer(nameArr);
 			//BASE_MAP.layers.addHeatMap(nameArr);
 		});
+};
+BASE_MAP.addGeoJSON2 = function(url){
+	var script = document.createElement("script");
+	script.setAttribute("type","text/javascript"); 
+	script.src = 'http://localhost:8080/GeoJSON/sh.json';
+	$(script).appendTo('body');
+	// document.getElementsByTagName('body').item(0).appendChild(script);
+	script.onload = function(data){
+		console.log(data);
+	};
 };
 BASE_MAP.addOnlineGeoJSON = function(){
 	for(var name in BASE_MAP.cityMaps){
@@ -511,7 +525,7 @@ BASE_MAP.layers.addHeatMap = function(arr){
 	arr.map(function(objVal){
 		BASE_MAP.queryWeatherData(objVal,arr);
 	});
-	BASE_MAP.dataCol.heatMapData = [{"lng":119.127345,"lat":33.623843,"name":"清河区","value":22},{"lng":119.295650664063,"lat":33.1425942207031,"name":"金湖县","value":20},{"lng":119.22271609375,"lat":34.0492153144531,"name":"涟水县","value":19},{"lng":118.897345,"lat":33.353843,"name":"洪泽县","value":20},{"lng":118.487345,"lat":33.243843,"name":"盱眙县","value":20}];
+	// BASE_MAP.dataCol.heatMapData = [{"lng":119.127345,"lat":33.623843,"name":"清河区","value":22},{"lng":119.295650664063,"lat":33.1425942207031,"name":"金湖县","value":20},{"lng":119.22271609375,"lat":34.0492153144531,"name":"涟水县","value":19},{"lng":118.897345,"lat":33.353843,"name":"洪泽县","value":20},{"lng":118.487345,"lat":33.243843,"name":"盱眙县","value":20}];
 	// BASE_MAP.dataCol.heatMapData = [{"lng":121.087345,"lat":31.0538430000001,"name":"青浦区","value":22},{"lng":121.297345,"lat":31.493843,"name":"嘉定区","value":22},{"lng":121.347345,"lat":31.2438430000001,"name":"长宁区","value":19},{"lng":121.027345,"lat":30.9438430000001,"name":"金山区","value":23},{"lng":121.337345,"lat":31.303843,"name":"宝山区","value":23},{"lng":121.397008085938,"lat":31.2888137031251,"name":"普陀区","value":22},{"lng":121.087345,"lat":31.0538430000001,"name":"松江区","value":23},{"lng":121.44982546875,"lat":31.0143874335938,"name":"奉贤区","value":23},{"lng":121.247345,"lat":31.263843,"name":"闵行区","value":22},{"lng":121.787447539063,"lat":31.1987868476563,"name":"浦东新区","value":23}];
 	// BASE_MAP.layers.heatMapRenderer(BASE_MAP.dataCol.heatMapData);
 };
@@ -539,7 +553,7 @@ BASE_MAP.layers.heatMapRenderer = function(arr){
 	heatMapLayer.setData(testData);
 	BASE_MAP.layers.heatMapLayer = heatMapLayer;
 	//添加到图层控制器
-	BASE_MAP.layers.layersControl.addOverlay(heatMapLayer,'温度热力图');
+	BASE_MAP.layers.addToLayerControl(heatMapLayer,'温度热力图');
 };
 BASE_MAP.queryWeatherData = function(obj,arr){
 	var url = 'http://v.juhe.cn/weather/index?callback=?';
@@ -591,7 +605,17 @@ BASE_MAP.layers.setStyleOptions = function(opts){
 	}
 	return BASE_MAP.commonMethods.setOptions(obj,opts);
 };
+BASE_MAP.layers.setPopup = function(layer,content,opts){
+	var obj = {maxWidth: 1000, maxHeight: 800};
+	opts = BASE_MAP.commonMethods.setOptions(obj,opts);
+	var popup = new L.popup(opts)
+		.setContent(content);
+	layer.bindPopup(popup);
+};
+BASE_MAP.layers.addToLayerControl = function(layer,name){
+	BASE_MAP.layers.layersControl.addOverlay(layer,name);
+};
 BASE_MAP.layers.clearLayers = function(){
 	BASE_MAP.layers.jsonLayer && (BASE_MAP.map.removeLayer(BASE_MAP.layers.jsonLayer),BASE_MAP.layers.layersControl.removeLayer(BASE_MAP.layers.jsonLayer));
 	BASE_MAP.layers.heatMapLayer && (BASE_MAP.map.removeLayer(BASE_MAP.layers.heatMapLayer),BASE_MAP.layers.layersControl.removeLayer(BASE_MAP.layers.heatMapLayer));
-}
+};
