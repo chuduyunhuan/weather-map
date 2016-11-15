@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>Proxy Example</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<link href="" rel="stylesheet">
+<script src="scripts/jquery-1.9.1.min.js"></script>
+</head>
+<body>
+    <script>
+    	$.ajax({
+    		url: 'http://localhost:3000/china-main-city/110100.json',
+    		dataType: 'json',
+    		type: 'get'
+    	})
+    		.done(function(data){
+    			console.log(data);
+    		});
+    	
+    </script>
+</body>
+</html>

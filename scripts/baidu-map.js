@@ -389,6 +389,17 @@ BASE_MAP.commonMethods.createArrFromObj = function(obj){
 	}
 	return arr;
 };
+BASE_MAP.layers.createLayerFromGeoJSON = function(data){
+	var jsonLayer = new L.geoJson(data,{
+		style: (feature) => {
+			
+		},
+		onEachFeature: (feature,layer) => {
+
+		}
+	});
+	return jsonLayer;
+};
 //dom事件
 BASE_MAP.events = {};
 BASE_MAP.events.enterPress = function(e){

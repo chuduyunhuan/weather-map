@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=8">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-control" content="no-cache">
+<meta http-equiv="Cache" content="no-cache">
+
+<title>百度地图&Geolocation</title>
+
+<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="css/leaflet.css" />
+<link rel="stylesheet" href="css/baidu-map.css" />
+
+<script src="scripts/jquery-1.9.1.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script src="scripts/leaflet-src.js"></script>
+<script src="scripts/leaflet-baidu.js"></script>
+<script src="scripts/heatmap.js"></script>
+<script src="scripts/leaflet-heatmap.js"></script>
+<script>
+	if (!Array.prototype.map) {
+	  Array.prototype.map = function(callback, thisArg) {
+
+	    var T, A, k;
+
+	    if (this == null) {
+	      throw new TypeError(" this is null or not defined");
+	    }
+
+	    // 1. 将O赋值为调用map方法的数组.
+	    var O = Object(this);
+
+	    // 2.将len赋值为数组O的长度.
+	    var len = O.length >>> 0;
+
+	    // 3.如果callback不是函数,则抛出TypeError异常.
+	    if (Object.prototype.toString.call(callback) != "[object Function]") {
+	      throw new TypeError(callback + " is not a function");
+	    }
+
+	    // 4. 如果参数thisArg有值,则将T赋值为thisArg;否则T为undefined.
+	    if (thisArg) {
+	      T = thisArg;
+	    }
+
+	    // 5. 创建新数组A,长度为原数组O长度len
+	    A = new Array(len);
+
+	    // 6. 将k赋值为0
+	    k = 0;
+
+	    // 7. 当 k < len 时,执行循环.
+	    while(k < len) {
+
+	      var kValue, mappedValue;
+
+	      //遍历O,k为原数组索引
+	      if (k in O) {
+
+	        //kValue为索引k对应的值.
+	        kValue = O[ k ];
+
+	        // 执行callback,this指向T,参数有三个.分别是kValue:值,k:索引,O:原数组.
+	        mappedValue = callback.call(T, kValue, k, O);
+
+	        // 返回值添加到新数组A中.
+	        A[ k ] = mappedValue;
+	      }
+	      // k自增1
+	      k++;
+	    }
+
+	    // 8. 返回新数组A
+	    return A;
+	  };      
+	}
+</script>
+</head>
+<body>
+	<div id="map" class="map"></div>
+	<script src="scripts/baidu-geolocation.js"></script>
+	<script>
+		$(document).ready(BASE_MAP.init('map',{minZoom: 1, zoom: 10}));
+	</script>
+</body>
+</html>
