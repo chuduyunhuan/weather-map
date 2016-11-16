@@ -14,11 +14,16 @@ var BASE_MAP = {
 		'幼儿园': 'images/child.png',
 		'派出所': 'images/police.png',
 		'高校': 'images/university.png',
-		'驾校': 'images/drive.png'
+		'驾校': 'images/drive.png',
+		'宾馆': 'images/hotel.png',
+		'医院': 'images/hospital.png',
+		'电影院': 'images/cinema.png',
+		'市政设施': 'images/marker-icon.png',
+		'loading': 'images/loading.gif'
 	},
 	init: function(id,opts){
 		BASE_MAP.addBaseMap(id,opts);
-		BASE_MAP.getServerData();
+		BASE_MAP.initDoms();
 	}
 };
 BASE_MAP.setMapOptions = function(opts){
@@ -55,10 +60,26 @@ BASE_MAP.addLayerControl = function(){
 	BASE_MAP.layers.layersControl = layersControl;
 	layersControl.addTo(BASE_MAP.map);
 };
-BASE_MAP.getServerData = function(){
-	var url = 'http://localhost:3000/civicism/address?type=' + encodeURIComponent('公园');
+BASE_MAP.initDoms = function(){
+	BASE_MAP.getAllTypes();
+	//文本框回车事件
+	BASE_MAP.commonMethods.customEvent('search','keydown',BASE_MAP.commonMethods.enterPress);
+	//文本框失去焦点事件
+	BASE_MAP.commonMethods.customEvent('search','blur',BASE_MAP.commonMethods.textBlur)
+};
+BASE_MAP.getAllTypes = function(){
+	var url = 'http://localhost:3000/civicism/types';
 	var callback = function(data){
-		BASE_MAP.commonMethods.mapData(data);
+		if(!data.length) return;
+		var htmlStr = '';
+		data.map(function(valObj){
+			htmlStr += '<option>' + valObj.TYPE + '</option>';
+		});
+		$('#type').html(htmlStr);
+		$('#type').on('change',function(){
+			var type = $('option:selected').text();
+			BASE_MAP.getServerData(type);
+		});
 	};
 	var obj = {
 		url: url,
@@ -66,12 +87,10 @@ BASE_MAP.getServerData = function(){
 	};
 	BASE_MAP.commonMethods.ajaxQuery(obj);
 };
-BASE_MAP.getServerData2 = function(){
-	var baseUrl = 'localhost',
-		basePort = '3000';
-	var url = 'http://' + baseUrl + ':'+basePort+'/proxy-server/services/ws/fast_query/area/re/re_cellByHotname?hotspot=' + encodeURIComponent('迪士尼');
+BASE_MAP.getServerData = function(type){
+	var url = 'http://localhost:3000/civicism/address?type=' + encodeURIComponent(type);
 	var callback = function(data){
-		console.log(data);
+		BASE_MAP.commonMethods.mapData(data,type);
 	};
 	var obj = {
 		url: url,
@@ -98,20 +117,35 @@ BASE_MAP.commonMethods.ajaxQuery = function(obj){
 	})
 		.done(callback);
 };
-BASE_MAP.commonMethods.mapData = function(data){
-	data.map(function(obj){
+BASE_MAP.commonMethods.mapData = function(data,type){
+	if(!data.length || data.length < 1) return;
+	BASE_MAP.commonMethods.showLoading();
+	BASE_MAP.layers.clearLayer('civicismLayer');
+	var civicismLayer = L.featureGroup();
+	type = type || '市政设施';
+	data.map(function(obj,index){
 		var addr = obj.address;
 		var name = obj.name;
 		var bd_url = 'http://localhost:3000/proxy-server/baidu/geolocation?city=' + encodeURIComponent('上海市') + '&address=' + encodeURIComponent(addr);
 		var bd_callback = function(bd_data){
 			if(!bd_data.result || !bd_data.result.location) return;
+			var icon = BASE_MAP.layers.setIcon(BASE_MAP.imgCol[obj.type],35,35);
+			var content = BASE_MAP.commonMethods.createHtml(name,addr);
+			var point = bd_data.result.location;
 			var parse_obj = {
-				data: bd_data,
-				type: '公园',
+				layer: civicismLayer,
+				point: point,
+				icon: icon,
 				name: name,
-				addr: addr
+				content: content
 			};
 			BASE_MAP.layers.setMarker(parse_obj);
+			if(index === data.length - 1) {
+				BASE_MAP.layers.civicismLayer = civicismLayer;
+				BASE_MAP.map.addLayer(civicismLayer);
+				BASE_MAP.layers.addToLayerControl(civicismLayer,type);
+				BASE_MAP.commonMethods.hideLoading();
+			}
 		};
 		var bd_obj = {
 			url: bd_url,
@@ -119,6 +153,42 @@ BASE_MAP.commonMethods.mapData = function(data){
 		};
 		BASE_MAP.commonMethods.ajaxQuery(bd_obj);
 	});
+};
+BASE_MAP.commonMethods.searchByName = function(name){
+	var url = 'http://localhost:3000/civicism/address/search?name=' + encodeURIComponent(name);
+	var callback = function(data){
+		BASE_MAP.commonMethods.mapData(data);
+	};
+	var obj = {
+		url: url,
+		callback: callback
+	};
+	BASE_MAP.commonMethods.ajaxQuery(obj);
+};
+BASE_MAP.commonMethods.customEvent = function(id,evtType,fn){
+	$('#'+id)[evtType](fn);
+};
+BASE_MAP.commonMethods.enterPress = function(e){
+	var curKey = e.which;
+	if(curKey !== 13) return;
+	var name = $(this).val();
+	if (!name) return;
+	BASE_MAP.commonMethods.searchByName(name);
+};
+BASE_MAP.commonMethods.textBlur = function(e){
+	$(e.target).val('请输入目标名称');
+};
+BASE_MAP.commonMethods.removeDomById = function(id){
+	var checkCustomDiv = document.getElementById(id);
+	checkCustomDiv != null && (checkCustomDiv.parentNode.removeChild(checkCustomDiv));
+};
+BASE_MAP.commonMethods.checkDomById = function(id){
+	var checkCustomDiv = document.getElementById(id);
+	if(!checkCustomDiv){
+		return false;
+	}else{
+		return true;
+	}
 };
 BASE_MAP.commonMethods.createHtml = function(name,val){
 	var htmlStr = '';
@@ -128,20 +198,51 @@ BASE_MAP.commonMethods.createHtml = function(name,val){
 		+ '<span>';
 	return htmlStr;
 };
-BASE_MAP.layers.setMarker = function(obj){
-	var markerIcon = L.icon({
-		iconUrl: BASE_MAP.imgCol[obj.type],
-		iconSize: [35, 35]
+BASE_MAP.commonMethods.showLoading = function(){
+	var loadingExist = BASE_MAP.commonMethods.checkDomById('customLoading');
+	if(loadingExist){
+		$('#customLoading').show();
+		return;
+	}
+	var $div = $('<div id="customLoading"></div>');
+	var winHeight = $(document).height(),
+		winWidth = $(document).width();
+	$div.css({
+		position: 'absolute', left: winWidth/2, top: winHeight/2, 'z-index': 999
 	});
-	var point = obj.data.result.location,
-		name = obj.name,
-		addr = obj.addr;
+	$div.html('<img src="' + BASE_MAP.imgCol['loading'] + '" />');
+	$div.appendTo('body');
+};
+BASE_MAP.commonMethods.hideLoading = function(){
+	$('#customLoading').hide();
+};
+BASE_MAP.layers.setIcon = function(iconUrl,width,height){
+	width = width || 35;
+	height = height || 35;
+	var icon = L.icon({
+		iconUrl: iconUrl,
+		iconSize: [width,height]
+	});
+	return icon;
+};
+BASE_MAP.layers.setPopup = function(layer,content,opts){
+	var obj = {maxWidth: 1000, maxHeight: 800};
+	opts = BASE_MAP.commonMethods.setOptions(obj,opts);
+	var popup = new L.popup(opts)
+		.setContent(content);
+	layer.bindPopup(popup);
+};
+BASE_MAP.layers.setMarker = function(obj){
+	var layer = obj.layer || BASE_MAP.layers.civicismLayer,
+		point = obj.point,
+		name = obj.name || 'A Marker',
+		markerIcon = obj.icon,
+		content = obj.content || 'A Marker';
 	var marker = L.marker(point, {
 		title: name, icon: markerIcon, keepInView: true
 	});
-	var content = BASE_MAP.commonMethods.createHtml(name,addr);
 	BASE_MAP.layers.setPopup(marker,content);
-	marker.addTo(BASE_MAP.map);
+	marker.addTo(layer);
 };
 BASE_MAP.layers.heatMapRenderer = function(arr){
 	var cfg = {
@@ -168,13 +269,6 @@ BASE_MAP.layers.heatMapRenderer = function(arr){
 	BASE_MAP.layers.heatMapLayer = heatMapLayer;
 	//添加到图层控制器
 	BASE_MAP.layers.addToLayerControl(heatMapLayer,'热力渲染');
-};
-BASE_MAP.layers.setPopup = function(layer,content,opts){
-	var obj = {maxWidth: 1000, maxHeight: 800};
-	opts = BASE_MAP.commonMethods.setOptions(obj,opts);
-	var popup = new L.popup(opts)
-		.setContent(content);
-	layer.bindPopup(popup);
 };
 BASE_MAP.layers.addToLayerControl = function(layer,name){
 	BASE_MAP.layers.layersControl.addOverlay(layer,name);

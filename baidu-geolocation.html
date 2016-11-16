@@ -84,6 +84,12 @@
 </head>
 <body>
 	<div id="map" class="map"></div>
+	<div class="select-div-wx">
+		<select id="type"></select>
+	</div>
+	<div class="search-div-wx">
+		<input type="text" id="search" placeholder="请输入目标名称" />
+	</div>
 	<script src="scripts/baidu-geolocation.js"></script>
 	<script>
 		$(document).ready(BASE_MAP.init('map',{minZoom: 1, zoom: 10}));
