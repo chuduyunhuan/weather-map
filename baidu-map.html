@@ -28,6 +28,8 @@
 	<script src="scripts/baidu-map.js"></script>
 	<script>
 		$(document).ready(BASE_MAP.init('map',{minZoom: 1, zoom: 10}));
+		var sessionObj = sessionStorage.getItem('obj');
+		console.log(JSON.parse(sessionObj));
 	</script>
 </body>
 </html>

@@ -10,16 +10,41 @@
 <script src="scripts/jquery-1.9.1.min.js"></script>
 </head>
 <body>
+    <input type="button" placeholder="" value="点我" onclick="openWindow()" />
     <script>
-    	$.ajax({
-    		url: 'http://localhost:3000/china-main-city/110100.json',
-    		dataType: 'json',
-    		type: 'get'
-    	})
-    		.done(function(data){
-    			console.log(data);
-    		});
-    	
+        var baseUrl = '10.221.247.7',
+            basePort = '8080';
+        
+        function ajaxQuery() {
+            var url = 'http://' + baseUrl + ':'+basePort+'/services/ws/fast_query/area/re/re_cellByHotname?hotspot=' + encodeURIComponent('迪士尼');
+            return $.ajax({
+                url: url,
+                dataType: 'json',
+                type: 'get'
+            });
+        }
+        var deferred = ajaxQuery();
+        deferred.done(function(result) {
+            console.log(result);
+        });
+        function setSessionStorage() {
+            var dataArr = [
+                {
+                    name: 'jack',
+                    age: 20,
+                    sex: 'female'
+                },{
+                    name: 'jack',
+                    age: 20,
+                    sex: 'female'
+                }
+            ];
+            window.sessionStorage.setItem('obj',JSON.stringify(dataArr));
+        }
+        setSessionStorage();
+        function openWindow() {
+            window.open('baidu-map.html');
+        }
     </script>
 </body>
 </html>

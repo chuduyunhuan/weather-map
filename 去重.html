@@ -27,7 +27,7 @@
             for(var i = 0, len = this.length; i < len; i++){
                 if (!n[this[i][field]]){
                     n[this[i][field]] = true; //存入hash表
-                    r.push(this[i][field]); //把当前数组的当前项push到临时数组里面
+                    r.push(this[i]); //把当前数组的当前项push到临时数组里面
                 }
             }
             return r;
@@ -48,14 +48,9 @@
             });
 
             var uniqueArr = filterArr.unique('distinct');
-
             var result = '';
-            filterArr.map(function(filterVal) {
-                uniqueArr.map(function(uniqueVal) {
-                    if(filterVal.distinct === uniqueVal) {
-                        result += filterVal.value + '\n';
-                    }
-                });
+            uniqueArr.map(function(obj) {
+                result += obj.value + '\n';
             });
 
             $('#proVal').html(result);
