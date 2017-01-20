@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>小区去重</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<link href="" rel="stylesheet">
+<style>
+    .origin-value {
+        display: block; width: 500px; height: 300px; margin-top: 20px;
+    }
+    .button {
+        position: absolute; top: 320px; left: 530px;
+    }
+</style>
+<script src="scripts/jquery-1.9.1.min.js"></script>
+</head>
+<body>
+    <textarea id="oriVal" class="origin-value"></textarea>
+    <textarea id="proVal" class="origin-value"></textarea>
+    <input type="button" class="button" value="开始去重" onclick="distinct()" />
+    <script>
+        Array.prototype.unique = function(field){
+            var n = {},r=[]; //n为hash表，r为临时数组
+            for(var i = 0, len = this.length; i < len; i++){
+                if (!n[this[i][field]]){
+                    n[this[i][field]] = true; //存入hash表
+                    r.push(this[i][field]); //把当前数组的当前项push到临时数组里面
+                }
+            }
+            return r;
+        };
+    </script>
+    <script>
+        function distinct() {
+            var str = $('#oriVal').val();
+            var arr = str.split('\n');
+
+            var filterArr = arr.map(function(val) {
+                var valArr = val.split('|');
+                var temVal = valArr[2] + ':' + valArr[3];
+                return {
+                    distinct: temVal,
+                    value: val
+                };
+            });
+
+            var uniqueArr = filterArr.unique('distinct');
+
+            var result = '';
+            filterArr.map(function(filterVal) {
+                uniqueArr.map(function(uniqueVal) {
+                    if(filterVal.distinct === uniqueVal) {
+                        result += filterVal.value + '\n';
+                    }
+                });
+            });
+
+            $('#proVal').html(result);
+        }
+    </script>
+</body>
+</html>
